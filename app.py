@@ -21,20 +21,26 @@ producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=la
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        sender = request.form['sender']
-        recipient = request.form['recipient']
-        amount = float(request.form['amount'])
+        senders = request.form.getlist('sender[]')
+        recipients = request.form.getlist('recipient[]')
+        amounts = request.form.getlist('amount[]')
 
-        new_transaction = Transaction(sender=sender, recipient=recipient, amount=amount)
-        db.session.add(new_transaction)
-        db.session.commit()
+        transactions = zip(senders, recipients, amounts)
 
-        producer.send('transactions', {'sender': sender, 'recipient': recipient, 'amount': amount})
+        for sender, recipient, amount in transactions:
+            amount = float(amount)
+            new_transaction = Transaction(sender=sender, recipient=recipient, amount=amount)
+            db.session.add(new_transaction)
+            db.session.commit()
+
+            producer.send('transactions', {'sender': sender, 'recipient': recipient, 'amount': amount})
+
         producer.flush()
 
         return redirect('/')
     else:
         return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
