@@ -16,7 +16,7 @@ class Transaction(db.Model):
 with app.app_context():
     db.create_all()
 
-producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+producer = KafkaProducer(security_protocol="SSL", bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
